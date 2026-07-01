@@ -1,17 +1,26 @@
 // Package platform provides a platform for web services.
 package platform
 
-import "github.com/rs/zerolog/log"
+import (
+	"context"
+	"os"
+	"os/signal"
 
-// Run is the entrypoint for an application. Optionally provide a service configuration.
-func Run(main func() error, c Config) {
+	"github.com/rs/zerolog/log"
+)
+
+// Run is the entrypoint for an application.
+func Run(entrypoint func(context.Context) error, c Config) {
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer cancel()
+
 	config = c
 	config.apply()
 
 	log.Info().Any("config", config).Msg("Starting")
 	defer log.Info().Msg("Stopped")
 
-	if err := main(); err != nil {
+	if err := entrypoint(ctx); err != nil {
 		log.Error().Err(err).Send()
 	}
 }
