@@ -1,0 +1,50 @@
+
+services:
+  api:
+  
+
+  db:
+    image: postgres:18.3
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: example
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+
+  otel-collector:
+    image: otel/opentelemetry-collector:0.152.0
+    volumes:
+      - ./config/otel-collector.yml:/etc/otelcol/config.yml
+    ports:
+      - 4317:4317 # otlp gRPC
+      # - 4318:4318 # otlp http (unused)
+      - 55679:55679 # gui http
+      - 9464:9464 # prometheus scraping http
+    command: ["--config=/etc/otelcol/config.yml"]
+
+  jaeger:
+    image: jaegertracing/jaeger:2.18.0
+    ports:
+      - 16686:16686 # gui http
+
+  prometheus:
+    image: prom/prometheus:v3
+    volumes:
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml
+    command: --config.file=/etc/prometheus/prometheus.yml
+    ports:
+      - 9090:9090 # gui http
+      
+  grafana:
+    image: grafana/grafana
+    ports:
+      - 3000:3000
+    environment:
+    - GF_SECURITY_ADMIN_USER=admin
+    - GF_SECURITY_ADMIN_PASSWORD=grafana

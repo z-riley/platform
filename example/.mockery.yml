@@ -1,0 +1,4 @@
+recursive: true
+template: testify
+packages:
+  github.com/z-riley/platform/example:
